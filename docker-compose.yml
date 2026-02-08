@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: spring-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: testdb
+    ports:
+      - "3306:3306"
+    networks:
+      - spring-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  api:
+    image: api:latest
+    container_name: spring-api
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/testdb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root1234
+    ports:
+      - "8080:8080"
+    networks:
+      - spring-network
+
+  batch-user-report:
+    image: batch:latest
+    container_name: spring-batch-user-report
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/testdb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root1234
+      BATCH_JOB_NAME: userReport
+    networks:
+      - spring-network
+    profiles:
+      - batch-user-report
+    restart: "no"
+
+  batch-team-report:
+    image: batch:latest
+    container_name: spring-batch-team-report
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/testdb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root1234
+      BATCH_JOB_NAME: teamReport
+    networks:
+      - spring-network
+    profiles:
+      - batch-team-report
+    restart: "no"
+
+networks:
+  spring-network:
+    driver: bridge

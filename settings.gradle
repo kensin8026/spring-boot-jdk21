@@ -1,0 +1,5 @@
+rootProject.name = 'spring_boot_jdk21'
+
+include 'core'
+include 'api'
+include 'batch'
